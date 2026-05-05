@@ -1,4 +1,5 @@
 import Script from 'next/script';
+import { SsoBoot } from './_components/SsoBoot';
 
 export const metadata = { title: 'Outlook ↔ monday Sync' };
 
@@ -10,6 +11,7 @@ export default function TaskpaneLayout({ children }: { children: React.ReactNode
         strategy="beforeInteractive"
       />
       <div className="min-h-screen bg-white text-zinc-900 text-sm">
+        <SsoBoot />
         {children}
       </div>
     </>
