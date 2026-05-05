@@ -17,7 +17,13 @@ export function SettingsTab() {
   }
 
   useEffect(() => {
-    refresh();
+    let cancelled = false;
+    fetch('/api/status', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!cancelled && data) setStatus(data);
+      });
+    return () => { cancelled = true; };
   }, []);
 
   function openPopup(url: string) {
