@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  msTenantId   String   @map("ms_tenant_id")
+  msUserId     String   @map("ms_user_id")
+  msUserEmail  String   @map("ms_user_email")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  msAccount      MsAccount?
+  mondayAccount  MondayAccount?
+  boards         BoardSubscription[]
+  mappings       EventMapping[]
+  log            SyncLog[]
+
+  @@unique([msTenantId, msUserId])
+  @@map("users")
+}
+
+model MsAccount {
+  userId                       String   @id @map("user_id") @db.Uuid
+  accessTokenEnc               Bytes    @map("access_token_enc")
+  refreshTokenEnc              Bytes    @map("refresh_token_enc")
+  expiresAt                    DateTime @map("expires_at")
+  graphSubscriptionId          String?  @map("graph_subscription_id")
+  graphSubscriptionExpiresAt   DateTime? @map("graph_subscription_expires_at")
+  selectedCalendarId           String?  @map("selected_calendar_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ms_accounts")
+}
+
+model MondayAccount {
+  userId           String  @id @map("user_id") @db.Uuid
+  mondayUserId     BigInt  @map("monday_user_id")
+  mondayAccountId  BigInt  @map("monday_account_id")
+  accessTokenEnc   Bytes   @map("access_token_enc")
+  refreshTokenEnc  Bytes   @map("refresh_token_enc")
+  expiresAt        DateTime @map("expires_at")
+  defaultBoardId   BigInt? @map("default_board_id")
+  defaultGroupId   String? @map("default_group_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("monday_accounts")
+}
+
+model BoardSubscription {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @map("user_id") @db.Uuid
+  mondayBoardId    BigInt   @map("monday_board_id")
+  dateColumnId     String   @map("date_column_id")
+  dateColumnKind   String   @map("date_column_kind")
+  mondayWebhookId  BigInt?  @map("monday_webhook_id")
+  active           Boolean  @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, mondayBoardId])
+  @@map("board_subscriptions")
+}
+
+model EventMapping {
+  id               String    @id @default(uuid()) @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  mondayItemId     BigInt    @map("monday_item_id")
+  mondayBoardId    BigInt    @map("monday_board_id")
+  graphEventId     String    @map("graph_event_id")
+  graphCalendarId  String    @map("graph_calendar_id")
+  mondayEtag       String?   @map("monday_etag")
+  graphEtag        String?   @map("graph_etag")
+  origin           String
+  lastSyncedAt     DateTime? @map("last_synced_at")
+  deletedAt        DateTime? @map("deleted_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, mondayItemId])
+  @@unique([userId, graphEventId])
+  @@map("event_mappings")
+}
+
+model SyncLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  direction   String
+  mappingId   String?  @map("mapping_id") @db.Uuid
+  action      String
+  message     String?
+  occurredAt  DateTime @default(now()) @map("occurred_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, occurredAt])
+  @@map("sync_log")
+}
