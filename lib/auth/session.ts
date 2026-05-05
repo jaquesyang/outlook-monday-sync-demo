@@ -25,7 +25,7 @@ function read(req: NextRequest): string | null {
 
 /** Write a fresh session cookie for the given userId. */
 export function setSessionCookie(res: NextResponse, userId: string) {
-  const blob = encryptToken(JSON.stringify({ userId })).toString('base64url');
+  const blob = Buffer.from(encryptToken(JSON.stringify({ userId }))).toString('base64url');
   res.cookies.set(COOKIE, blob, {
     httpOnly: true,
     secure: true,
