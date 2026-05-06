@@ -76,8 +76,8 @@ Copy `.env.example` to `.env.local` and fill in:
 
 | Variable | Purpose |
 |----------|---------|
-| `POSTGRES_URL` | PostgreSQL connection string |
-| `POSTGRES_URL_NON_POOLING` | Direct connection for Prisma migrations |
+| `POSTGRES_URL` | PostgreSQL connection string (pooled via PgBouncer on Supabase) |
+| `POSTGRES_URL_NON_POOLING` | Direct connection for Prisma migrations **and runtime queries** (avoids PgBouncer prepared-statement errors) |
 | `MS_GRAPH_CLIENT_ID` | Azure AD app registration ID |
 | `MS_GRAPH_CLIENT_SECRET` | Azure AD client secret |
 | `MONDAY_CLIENT_ID` | monday.com OAuth app ID |
@@ -119,3 +119,4 @@ Deployed on Vercel. The build command includes `prisma generate` and `prisma mig
 - `getAppBaseUrl()` in `lib/env.ts` prefers `VERCEL_URL` for dynamic preview/production URLs, falling back to `APP_BASE_URL` and then `localhost:3000`.
 - The manifest supports three Outlook surfaces: **MessageRead**, **AppointmentOrganizer**, and **AppointmentAttendee**.
 - `prisma migrate deploy` is wrapped with `timeout 30` in the Vercel build to prevent hanging on unreachable pooler connections.
+- Prisma Client is initialized with `POSTGRES_URL_NON_POOLING` at runtime to bypass PgBouncer and avoid prepared-statement conflicts (error 42P05).
