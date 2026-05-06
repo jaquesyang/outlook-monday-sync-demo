@@ -102,8 +102,8 @@
         </bt:LongStrings>
       </Resources>
       <WebApplicationInfo>
-        <Id>00000000-0000-0000-0000-000000000000</Id>
-        <Resource>api://localhost:3000/00000000-0000-0000-0000-000000000000</Resource>
+        <Id>7baf2726-34b6-41b0-b86a-e2b8436737b2</Id>
+        <Resource>api://localhost:3000/7baf2726-34b6-41b0-b86a-e2b8436737b2</Resource>
         <Scopes>
           <Scope>profile</Scope>
           <Scope>openid</Scope>

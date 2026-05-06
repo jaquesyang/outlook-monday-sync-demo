@@ -2,10 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { decodeState } from '@/lib/auth/oauth-state';
 import { exchangeCodeForToken } from '@/lib/ms/oauth';
 import { encryptToken } from '@/lib/crypto/token';
-
-function toBytes(buf: Buffer): Uint8Array<ArrayBuffer> {
-  return new Uint8Array(buf) as Uint8Array<ArrayBuffer>;
-}
 import { prisma } from '@/lib/db/client';
 import { setSessionCookie } from '@/lib/auth/session';
 import { decodeJwt } from 'jose';
@@ -40,14 +36,14 @@ export async function GET(req: NextRequest) {
   await prisma.msAccount.upsert({
     where: { userId: user.id },
     update: {
-      accessTokenEnc: toBytes(encryptToken(tok.access_token)),
-      refreshTokenEnc: toBytes(encryptToken(tok.refresh_token)),
+      accessTokenEnc: encryptToken(tok.access_token),
+      refreshTokenEnc: encryptToken(tok.refresh_token),
       expiresAt: new Date(Date.now() + tok.expires_in * 1000),
     },
     create: {
       userId: user.id,
-      accessTokenEnc: toBytes(encryptToken(tok.access_token)),
-      refreshTokenEnc: toBytes(encryptToken(tok.refresh_token)),
+      accessTokenEnc: encryptToken(tok.access_token),
+      refreshTokenEnc: encryptToken(tok.refresh_token),
       expiresAt: new Date(Date.now() + tok.expires_in * 1000),
     },
   });

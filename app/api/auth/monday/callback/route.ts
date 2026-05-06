@@ -4,10 +4,6 @@ import { exchangeCodeForToken, fetchMondayMe } from '@/lib/monday/oauth';
 import { encryptToken } from '@/lib/crypto/token';
 import { prisma } from '@/lib/db/client';
 
-function toBytes(buf: Buffer): Uint8Array<ArrayBuffer> {
-  return new Uint8Array(buf) as Uint8Array<ArrayBuffer>;
-}
-
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get('code');
   const state = req.nextUrl.searchParams.get('state');
@@ -29,16 +25,16 @@ export async function GET(req: NextRequest) {
     update: {
       mondayUserId: me.mondayUserId,
       mondayAccountId: me.mondayAccountId,
-      accessTokenEnc: toBytes(encryptToken(tok.access_token)),
-      refreshTokenEnc: toBytes(encryptToken(tok.refresh_token)),
+      accessTokenEnc: encryptToken(tok.access_token),
+      refreshTokenEnc: encryptToken(tok.refresh_token),
       expiresAt: new Date(Date.now() + tok.expires_in * 1000),
     },
     create: {
       userId,
       mondayUserId: me.mondayUserId,
       mondayAccountId: me.mondayAccountId,
-      accessTokenEnc: toBytes(encryptToken(tok.access_token)),
-      refreshTokenEnc: toBytes(encryptToken(tok.refresh_token)),
+      accessTokenEnc: encryptToken(tok.access_token),
+      refreshTokenEnc: encryptToken(tok.refresh_token),
       expiresAt: new Date(Date.now() + tok.expires_in * 1000),
     },
   });
