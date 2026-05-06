@@ -1,0 +1,108 @@
+Here's the step-by-step guide to register your Azure AD app for Microsoft Graph OAuth.
+
+  1. Go to Microsoft Entra admin center
+
+  Open https://entra.microsoft.com and sign in with your Microsoft account.
+
+  2. Create a new app registration
+
+  1. Navigate to Identity → Applications → App registrations → New registration
+  2. Name: Outlook monday Sync (dev)
+  3. Supported account types: Select "Accounts in any organizational directory and personal
+  Microsoft accounts"
+  4. Click Register
+
+  3. Copy the Client ID
+
+  On the Overview page, copy the Application (client) ID and paste it into your .env.local:
+
+  MS_GRAPH_CLIENT_ID=your-client-id-here
+
+  4. Create a client secret
+
+  1. Go to Certificates & secrets → Client secrets → New client secret
+  2. Description: dev
+  3. Expires: 6 months (or 24 months)
+  4. Click Add
+  5. Immediately copy the Value (you can only see it once)
+
+  Paste into .env.local:
+
+  MS_GRAPH_CLIENT_SECRET=your-secret-here
+
+  5. Add API permissions
+
+  1. Go to API permissions → Add a permission → Microsoft Graph → Delegated permissions
+  2. Check these three:
+    - Calendars.ReadWrite
+    - User.Read
+    - offline_access
+  3. Click Add permissions
+  4. If you have admin rights, click Grant admin consent for [tenant] (this prevents users from
+  seeing a consent screen)
+
+  6. Expose an API (for Office.js SSO)
+
+  1. Go to Expose an API → Add next to Application ID URI
+  2. Set it to: api://localhost:3000/<your-client-id>
+  3. Click Save
+  4. Click Add a scope
+    - Scope name: access_as_user
+    - Who can consent: Admins and users
+    - Fill in display names and descriptions
+    - Click Add scope
+
+  7. Update your .env.local
+
+  MS_GRAPH_CLIENT_ID=your-client-id
+  MS_GRAPH_CLIENT_SECRET=your-secret
+  MS_GRAPH_TENANT=common
+  APP_BASE_URL=https://localhost:3000
+  TOKEN_ENC_KEY=your-32-byte-base64-key
+
+  8. Update the manifest
+
+  Open manifest/manifest.xml and replace the placeholder GUIDs:
+
+  <!-- Top-level app ID -->
+  <Id>your-client-id</Id>
+
+  <!-- Inside WebApplicationInfo -->
+  <WebApplicationInfo>
+    <Id>your-client-id</Id>
+    <Resource>api://localhost:3000/your-client-id</Resource>
+    ...
+  </WebApplicationInfo>
+
+  9. Validate
+
+  npm run manifest:validate
+
+  Expected: structural validation passes (AppSource checks may warn about the localhost URLs,
+  which is fine for sideloading).
+
+  ---
+
+
+1. Go to https://entra.microsoft.com → Identity → Applications → App registrations
+  2. Find your app Outlook monday Sync (dev) and click it
+  3. Go to Authentication → Add a platform → Web
+  4. Add this redirect URI:
+
+  https://localhost:3000/api/auth/microsoft/callback
+
+  5. Make sure "Allow implicit flow and hybrid flows" is unchecked (we use auth code flow, not
+  implicit)
+  6. Click Configure or Save
+
+  Also verify
+
+  While you're on the Authentication page, check:
+  - Access tokens: unchecked
+  - ID tokens: unchecked
+  - Enable the following mobile and desktop flows: unchecked
+
+  We only need the Web redirect URI for the auth code flow.
+
+
+  https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Overview/appId/7baf2726-34b6-41b0-b86a-e2b8436737b2/objectId/6768fde2-04da-4bbb-baa1-64cccb01f345/isMSAApp~/false/defaultBlade/Overview/appSignInAudience/AzureADandPersonalMicrosoftAccount/servicePrincipalCreated~/true

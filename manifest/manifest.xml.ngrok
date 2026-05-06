@@ -1,19 +1,21 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+           xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.1"
            xsi:type="MailApp">
-  <Id>80f37f30-6809-41d1-a793-210683fcef32</Id>
-  <Version>1.0.0.0</Version>
-  <ProviderName>monday Sync</ProviderName>
+
+  <Id>11111111-2222-3333-4444-555555555555</Id>
+  <Version>0.1.0.0</Version>
+  <ProviderName>Outlook monday Sync</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="monday Sync" />
+  <DisplayName DefaultValue="Outlook ↔ monday Sync" />
   <Description DefaultValue="Bidirectional sync between Outlook calendar and monday.com." />
-  <IconUrl DefaultValue="https://localhost:3000/icons/icon-64.png" />
-  <HighResolutionIconUrl DefaultValue="https://localhost:3000/icons/icon-128.png" />
-  <SupportUrl DefaultValue="https://localhost:3000" />
+  <IconUrl DefaultValue="https://jump-platform-unsheathe.ngrok-free.dev/icons/icon-64.png" />
+  <HighResolutionIconUrl DefaultValue="https://jump-platform-unsheathe.ngrok-free.dev/icons/icon-128.png" />
+  <SupportUrl DefaultValue="https://jump-platform-unsheathe.ngrok-free.dev" />
   <AppDomains>
-    <AppDomain>https://localhost:3000</AppDomain>
+    <AppDomain>https://jump-platform-unsheathe.ngrok-free.dev</AppDomain>
   </AppDomains>
 
   <Hosts>
@@ -22,48 +24,54 @@
 
   <Requirements>
     <Sets>
-      <Set Name="Mailbox" MinVersion="1.5" />
+      <Set Name="Mailbox" MinVersion="1.10" />
     </Sets>
   </Requirements>
 
   <FormSettings>
     <Form xsi:type="ItemRead">
       <DesktopSettings>
-        <SourceLocation DefaultValue="https://localhost:3000/taskpane" />
+        <SourceLocation DefaultValue="https://jump-platform-unsheathe.ngrok-free.dev/taskpane" />
         <RequestedHeight>250</RequestedHeight>
       </DesktopSettings>
     </Form>
   </FormSettings>
 
   <Permissions>ReadWriteMailbox</Permissions>
-  <Rule xsi:type="ItemIs" ItemType="Message" FormType="Read" />
+  <Rule xsi:type="RuleCollection" Mode="Or">
+    <Rule xsi:type="ItemIs" ItemType="Message" />
+    <Rule xsi:type="ItemIs" ItemType="AppointmentAttendee" />
+    <Rule xsi:type="ItemIs" ItemType="AppointmentOrganizer" />
+  </Rule>
+  <DisableEntityHighlighting>false</DisableEntityHighlighting>
 
   <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides"
                     xsi:type="VersionOverridesV1_0">
     <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides/1.1"
                       xsi:type="VersionOverridesV1_1">
       <Requirements>
-        <bt:Sets DefaultMinVersion="1.5">
+        <bt:Sets DefaultMinVersion="1.10">
           <bt:Set Name="Mailbox" />
         </bt:Sets>
       </Requirements>
       <Hosts>
         <Host xsi:type="MailHost">
           <DesktopFormFactor>
+            <FunctionFile resid="commands.url" />
             <ExtensionPoint xsi:type="MessageReadCommandSurface">
               <OfficeTab id="TabDefault">
                 <Group id="msgReadGroup">
                   <Label resid="group.label" />
-                  <Control xsi:type="Button" id="openTaskpaneMsgRead">
+                  <Control xsi:type="Button" id="openTaskpaneMsg">
                     <Label resid="open.label" />
                     <Supertip>
                       <Title resid="open.label" />
                       <Description resid="open.tip" />
                     </Supertip>
                     <Icon>
-                      <bt:Image size="16" resid="icon16" />
-                      <bt:Image size="32" resid="icon32" />
-                      <bt:Image size="80" resid="icon80" />
+                      <bt:Image size="16" resource="icon16" />
+                      <bt:Image size="32" resource="icon32" />
+                      <bt:Image size="80" resource="icon80" />
                     </Icon>
                     <Action xsi:type="ShowTaskpane">
                       <SourceLocation resid="taskpane.url" />
@@ -74,7 +82,7 @@
             </ExtensionPoint>
             <ExtensionPoint xsi:type="AppointmentOrganizerCommandSurface">
               <OfficeTab id="TabDefault">
-                <Group id="apptOrgGroup">
+                <Group id="apptOrganizerGroup">
                   <Label resid="group.label" />
                   <Control xsi:type="Button" id="openTaskpaneApptOrg">
                     <Label resid="open.label" />
@@ -83,9 +91,9 @@
                       <Description resid="open.tip" />
                     </Supertip>
                     <Icon>
-                      <bt:Image size="16" resid="icon16" />
-                      <bt:Image size="32" resid="icon32" />
-                      <bt:Image size="80" resid="icon80" />
+                      <bt:Image size="16" resource="icon16" />
+                      <bt:Image size="32" resource="icon32" />
+                      <bt:Image size="80" resource="icon80" />
                     </Icon>
                     <Action xsi:type="ShowTaskpane">
                       <SourceLocation resid="taskpane.url" />
@@ -96,7 +104,7 @@
             </ExtensionPoint>
             <ExtensionPoint xsi:type="AppointmentAttendeeCommandSurface">
               <OfficeTab id="TabDefault">
-                <Group id="apptAttGroup">
+                <Group id="apptAttendeeGroup">
                   <Label resid="group.label" />
                   <Control xsi:type="Button" id="openTaskpaneApptAtt">
                     <Label resid="open.label" />
@@ -105,9 +113,9 @@
                       <Description resid="open.tip" />
                     </Supertip>
                     <Icon>
-                      <bt:Image size="16" resid="icon16" />
-                      <bt:Image size="32" resid="icon32" />
-                      <bt:Image size="80" resid="icon80" />
+                      <bt:Image size="16" resource="icon16" />
+                      <bt:Image size="32" resource="icon32" />
+                      <bt:Image size="80" resource="icon80" />
                     </Icon>
                     <Action xsi:type="ShowTaskpane">
                       <SourceLocation resid="taskpane.url" />
@@ -121,21 +129,30 @@
       </Hosts>
       <Resources>
         <bt:Images>
-          <bt:Image id="icon16" DefaultValue="https://localhost:3000/icons/icon-16.png" />
-          <bt:Image id="icon32" DefaultValue="https://localhost:3000/icons/icon-32.png" />
-          <bt:Image id="icon80" DefaultValue="https://localhost:3000/icons/icon-80.png" />
+          <bt:Image id="icon16" DefaultValue="https://jump-platform-unsheathe.ngrok-free.dev/icons/icon-16.png" />
+          <bt:Image id="icon32" DefaultValue="https://jump-platform-unsheathe.ngrok-free.dev/icons/icon-32.png" />
+          <bt:Image id="icon80" DefaultValue="https://jump-platform-unsheathe.ngrok-free.dev/icons/icon-80.png" />
         </bt:Images>
         <bt:Urls>
-          <bt:Url id="taskpane.url" DefaultValue="https://localhost:3000/taskpane" />
+          <bt:Url id="taskpane.url" DefaultValue="https://jump-platform-unsheathe.ngrok-free.dev/taskpane" />
+          <bt:Url id="commands.url" DefaultValue="https://jump-platform-unsheathe.ngrok-free.dev/commands" />
         </bt:Urls>
         <bt:ShortStrings>
           <bt:String id="group.label" DefaultValue="monday Sync" />
           <bt:String id="open.label" DefaultValue="Open sync panel" />
         </bt:ShortStrings>
         <bt:LongStrings>
-          <bt:String id="open.tip" DefaultValue="Open the monday sync panel." />
+          <bt:String id="open.tip" DefaultValue="Open the Outlook ↔ monday sync panel." />
         </bt:LongStrings>
       </Resources>
+      <WebApplicationInfo>
+        <Id>7baf2726-34b6-41b0-b86a-e2b8436737b2</Id>
+        <Resource>api://jump-platform-unsheathe.ngrok-free.dev/7baf2726-34b6-41b0-b86a-e2b8436737b2</Resource>
+        <Scopes>
+          <Scope>profile</Scope>
+          <Scope>openid</Scope>
+        </Scopes>
+      </WebApplicationInfo>
     </VersionOverrides>
   </VersionOverrides>
 </OfficeApp>

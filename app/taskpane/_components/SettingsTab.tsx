@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ConnectionStatus } from './ConnectionStatus';
 
 type StatusPayload = {
@@ -10,9 +10,12 @@ type StatusPayload = {
 
 export function SettingsTab() {
   const [status, setStatus] = useState<StatusPayload | null>(null);
+  const callbackTokenRef = useRef<string>('');
 
   async function refresh() {
-    const r = await fetch('/api/status', { credentials: 'include' });
+    const token = callbackTokenRef.current;
+    const url = token ? `/api/status?callbackToken=${encodeURIComponent(token)}` : '/api/status';
+    const r = await fetch(url, { credentials: 'include' });
     if (r.ok) setStatus(await r.json());
   }
 
@@ -23,11 +26,25 @@ export function SettingsTab() {
       .then((data) => {
         if (!cancelled && data) setStatus(data);
       });
-    return () => { cancelled = true; };
+
+    const handler = (e: MessageEvent) => {
+      if (e.data?.type === 'oauth-success') {
+        refresh();
+      }
+    };
+    window.addEventListener('message', handler);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('message', handler);
+    };
   }, []);
 
   function openPopup(url: string) {
-    const w = window.open(url, '_blank', 'width=520,height=640');
+    const token = crypto.randomUUID();
+    callbackTokenRef.current = token;
+    const u = new URL(url, window.location.href);
+    u.searchParams.set('callbackToken', token);
+    const w = window.open(u.toString(), '_blank', 'width=520,height=640');
     const t = setInterval(() => {
       if (w?.closed) {
         clearInterval(t);

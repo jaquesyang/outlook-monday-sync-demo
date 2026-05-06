@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { SettingsTab } from './_components/SettingsTab';
+import { BoardsTab } from './_components/BoardsTab';
 
 const TABS = ['Status', 'Boards', 'Settings', 'Log'] as const;
 
@@ -29,9 +30,9 @@ export default function TaskpanePage() {
         ))}
       </nav>
       <main className="flex-1 overflow-y-auto">
-        {tab === 'Settings' ? (
-          <SettingsTab />
-        ) : (
+        {tab === 'Settings' && <SettingsTab />}
+        {tab === 'Boards' && <BoardsTab />}
+        {tab !== 'Settings' && tab !== 'Boards' && (
           <div className="p-4 text-zinc-500">Coming in a later phase.</div>
         )}
       </main>

@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { encryptToken, decryptToken } from '@/lib/crypto/token';
 
-type Payload = { userId: string; purpose: 'ms' | 'monday'; nonce?: string };
+type Payload = { userId: string; purpose: 'ms' | 'monday'; nonce?: string; callbackToken?: string };
 
 export function encodeState(p: Omit<Payload, 'nonce'>): string {
   const full: Payload = { ...p, nonce: randomBytes(16).toString('hex') };

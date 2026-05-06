@@ -22,7 +22,7 @@ export function buildAuthorizeUrl(opts: { state: string; redirectUri: string }) 
 
 export type MondayTokenResponse = {
   access_token: string;
-  refresh_token: string;
+  refresh_token?: string;
   token_type: string;
   expires_in: number;
   scope: string;
@@ -44,8 +44,13 @@ export async function exchangeCodeForToken(opts: {
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body,
   });
-  if (!r.ok) throw new Error(`monday token exchange failed: ${r.status} ${await r.text()}`);
-  return (await r.json()) as MondayTokenResponse;
+  const rawText = await r.text();
+  if (!r.ok) throw new Error(`monday token exchange failed: ${r.status} ${rawText}`);
+  const payload = JSON.parse(rawText) as MondayTokenResponse;
+  if (!payload.access_token) {
+    throw new Error(`monday token response missing access_token: ${rawText}`);
+  }
+  return payload;
 }
 
 /** Query the `me` endpoint to learn the monday user/account ids. */

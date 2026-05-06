@@ -7,6 +7,21 @@ export default function TaskpaneLayout({ children }: { children: React.ReactNode
   return (
     <>
       <Script
+        id="history-polyfill"
+        dangerouslySetInnerHTML={{
+          __html: `
+            try {
+              if (window.history && !window.history.replaceState) {
+                window.history.replaceState = function(){};
+              }
+              if (window.history && !window.history.pushState) {
+                window.history.pushState = function(){};
+              }
+            } catch(e) {}
+          `,
+        }}
+      />
+      <Script
         src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"
         strategy="beforeInteractive"
       />

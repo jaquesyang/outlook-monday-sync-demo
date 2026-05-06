@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+           xsi:type="MailApp">
+  <Id>11111111-2222-3333-4444-555555555555</Id>
+  <Version>0.1.0.0</Version>
+  <ProviderName>Outlook monday Sync</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="Outlook ↔ monday Sync" />
+  <Description DefaultValue="Sync Outlook calendar with monday.com." />
+  <IconUrl DefaultValue="https://puerto-station-birth-sword.trycloudflare.com/icons/icon-64.png" />
+  <HighResolutionIconUrl DefaultValue="https://puerto-station-birth-sword.trycloudflare.com/icons/icon-128.png" />
+  <SupportUrl DefaultValue="https://puerto-station-birth-sword.trycloudflare.com" />
+  <AppDomains>
+    <AppDomain>https://puerto-station-birth-sword.trycloudflare.com</AppDomain>
+  </AppDomains>
+  <Hosts><Host Name="Mailbox" /></Hosts>
+  <Requirements><Sets><Set Name="Mailbox" MinVersion="1.1" /></Sets></Requirements>
+  <FormSettings>
+    <Form xsi:type="ItemRead">
+      <DesktopSettings>
+        <SourceLocation DefaultValue="https://puerto-station-birth-sword.trycloudflare.com/taskpane" />
+        <RequestedHeight>250</RequestedHeight>
+      </DesktopSettings>
+    </Form>
+  </FormSettings>
+  <Permissions>ReadWriteItem</Permissions>
+  <Rule xsi:type="RuleCollection" Mode="Or">
+    <Rule xsi:type="ItemIs" ItemType="Message" />
+    <Rule xsi:type="ItemIs" ItemType="AppointmentAttendee" />
+    <Rule xsi:type="ItemIs" ItemType="AppointmentOrganizer" />
+  </Rule>
+  <DisableEntityHighlighting>false</DisableEntityHighlighting>
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/mailappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="MailHost">
+        <DesktopFormFactor>
+          <ExtensionPoint xsi:type="MessageReadCommandSurface">
+            <OfficeTab id="TabDefault">
+              <Group id="msgReadGroup">
+                <Label resid="group.label" />
+                <Control xsi:type="Button" id="openTaskpane">
+                  <Label resid="open.label" />
+                  <Supertip>
+                    <Title resid="open.label" />
+                    <Description resid="open.tip" />
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resource="icon16" />
+                    <bt:Image size="32" resource="icon32" />
+                    <bt:Image size="80" resource="icon80" />
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <SourceLocation resid="taskpane.url" />
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+    <Resources>
+      <bt:Images>
+        <bt:Image id="icon16" DefaultValue="https://puerto-station-birth-sword.trycloudflare.com/icons/icon-16.png" />
+        <bt:Image id="icon32" DefaultValue="https://puerto-station-birth-sword.trycloudflare.com/icons/icon-32.png" />
+        <bt:Image id="icon80" DefaultValue="https://puerto-station-birth-sword.trycloudflare.com/icons/icon-80.png" />
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="taskpane.url" DefaultValue="https://puerto-station-birth-sword.trycloudflare.com/taskpane" />
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="group.label" DefaultValue="monday Sync" />
+        <bt:String id="open.label" DefaultValue="Open sync panel" />
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="open.tip" DefaultValue="Open the Outlook ↔ monday sync panel." />
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>

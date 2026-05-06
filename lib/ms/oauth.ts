@@ -48,3 +48,20 @@ export async function exchangeCodeForToken(opts: {
   if (!r.ok) throw new Error(`MS token exchange failed: ${r.status} ${await r.text()}`);
   return (await r.json()) as MsTokenResponse;
 }
+
+export async function refreshAccessToken(refreshToken: string): Promise<MsTokenResponse> {
+  const body = new URLSearchParams({
+    client_id: process.env.MS_GRAPH_CLIENT_ID!,
+    client_secret: process.env.MS_GRAPH_CLIENT_SECRET!,
+    grant_type: 'refresh_token',
+    refresh_token: refreshToken,
+    scope: MS_SCOPES.join(' '),
+  });
+  const r = await fetch(TOKEN, {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body,
+  });
+  if (!r.ok) throw new Error(`MS token refresh failed: ${r.status} ${await r.text()}`);
+  return (await r.json()) as MsTokenResponse;
+}

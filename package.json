@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "manifest:validate": "office-addin-manifest validate manifest/manifest.xml"
+    "manifest:validate": "office-addin-manifest validate manifest/manifest.xml",
+    "dev:tunnel": "tsx scripts/start-tunnel.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

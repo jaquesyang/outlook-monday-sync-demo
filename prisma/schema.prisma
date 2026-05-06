@@ -42,9 +42,9 @@ model MondayAccount {
   userId           String  @id @map("user_id") @db.Uuid
   mondayUserId     BigInt  @map("monday_user_id")
   mondayAccountId  BigInt  @map("monday_account_id")
-  accessTokenEnc   Bytes   @map("access_token_enc")
-  refreshTokenEnc  Bytes   @map("refresh_token_enc")
-  expiresAt        DateTime @map("expires_at")
+  accessTokenEnc   Bytes    @map("access_token_enc")
+  refreshTokenEnc  Bytes?   @map("refresh_token_enc")
+  expiresAt        DateTime? @map("expires_at")
   defaultBoardId   BigInt? @map("default_board_id")
   defaultGroupId   String? @map("default_group_id")
 

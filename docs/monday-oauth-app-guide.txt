@@ -1,0 +1,68 @@
+Here's the step-by-step guide to register your monday.com OAuth app.
+
+  1. Go to monday.com developers
+
+  Open https://monday.com/developers/apps and sign in with your monday account.
+
+  2. Create a new app
+
+  1. Click "Create app"
+  2. App name: Outlook monday Sync
+  3. Click Create
+
+  3. Set the OAuth redirect URL
+
+  1. In your app, go to OAuth tab (or Features → OAuth)
+  2. Under Redirect URLs, add:
+
+  https://localhost:3000/api/auth/monday/callback
+
+  3. Click Save
+
+  4. Configure OAuth scopes
+
+  In the same OAuth section, enable these permissions:
+
+  - boards:read
+  - boards:write
+  - webhooks:read
+  - webhooks:write
+  - me:read
+  - users:read
+
+  Click Save.
+
+  5. Copy credentials to .env.local
+
+  From the OAuth tab, copy:
+
+  - Client ID → MONDAY_CLIENT_ID
+  - Client Secret → MONDAY_CLIENT_SECRET
+
+  From the Webhooks tab (or Basic information), copy:
+
+  - Signing Secret → MONDAY_SIGNING_SECRET
+
+  Add to .env.local:
+
+  MONDAY_CLIENT_ID=your-monday-client-id
+  MONDAY_CLIENT_SECRET=your-monday-client-secret
+  MONDAY_SIGNING_SECRET=your-signing-secret
+
+  6. Test the flow
+
+  With your dev server running (npm run dev -- --experimental-https), open:
+
+  https://localhost:3000/api/auth/monday
+
+  Expected: monday.com consent screen → after approval → "monday connected ✓" page.
+
+  7. Verify the database
+
+  SELECT * FROM monday_accounts;
+
+  Expected: 1 row with your monday_user_id, monday_account_id, and encrypted tokens.
+
+  ---
+  After this works, both Microsoft and monday will be connected. Want me to walk you through
+  testing the full taskpane in Outlook next?
