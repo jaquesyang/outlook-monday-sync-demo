@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db/client';
 import { setSessionCookie } from '@/lib/auth/session';
 import { setCallbackToken } from '@/lib/auth/callback-tokens';
 import { decodeJwt } from 'jose';
+import { getAppBaseUrl } from '@/lib/env';
 
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get('code');
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
   const { userId, purpose, callbackToken } = decodeState(state);
   if (purpose !== 'ms') return NextResponse.json({ error: 'wrong purpose' }, { status: 400 });
 
-  const redirectUri = `${process.env.APP_BASE_URL}/api/auth/microsoft/callback`;
+  const redirectUri = `${getAppBaseUrl()}/api/auth/microsoft/callback`;
   const tok = await exchangeCodeForToken({ code, redirectUri });
 
   // ID token gives us tenantId/userId/email without an extra Graph call.

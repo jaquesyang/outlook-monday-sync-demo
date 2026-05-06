@@ -4,6 +4,7 @@ import { exchangeCodeForToken, fetchMondayMe } from '@/lib/monday/oauth';
 import { encryptToken } from '@/lib/crypto/token';
 import { prisma } from '@/lib/db/client';
 import { setCallbackToken } from '@/lib/auth/callback-tokens';
+import { getAppBaseUrl } from '@/lib/env';
 
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get('code');
@@ -13,7 +14,7 @@ export async function GET(req: NextRequest) {
   const { userId, purpose, callbackToken } = decodeState(state);
   if (purpose !== 'monday') return NextResponse.json({ error: 'wrong purpose' }, { status: 400 });
 
-  const redirectUri = `${process.env.APP_BASE_URL}/api/auth/monday/callback`;
+  const redirectUri = `${getAppBaseUrl()}/api/auth/monday/callback`;
   const tok = await exchangeCodeForToken({ code, redirectUri });
   const me = await fetchMondayMe(tok.access_token);
 

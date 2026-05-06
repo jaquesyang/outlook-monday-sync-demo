@@ -1,4 +1,5 @@
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose';
+import { getAppBaseUrl } from '@/lib/env';
 
 const JWKS = createRemoteJWKSet(
   new URL('https://login.microsoftonline.com/common/discovery/v2.0/keys'),
@@ -7,7 +8,7 @@ const JWKS = createRemoteJWKSet(
 export type MsIdentity = { tenantId: string; userId: string; email: string };
 
 export async function verifyOfficeSsoToken(token: string): Promise<MsIdentity> {
-  const audience = `api://${new URL(process.env.APP_BASE_URL!).host}/${process.env.MS_GRAPH_CLIENT_ID}`;
+  const audience = `api://${new URL(getAppBaseUrl()).host}/${process.env.MS_GRAPH_CLIENT_ID}`;
   const { payload } = await jwtVerify(token, JWKS, {
     audience,
     issuer: /^https:\/\/login\.microsoftonline\.com\/[^/]+\/v2\.0$/ as unknown as string,
