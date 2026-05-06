@@ -1,36 +1,121 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# monday Sync — Outlook Calendar Add-in
 
-## Getting Started
+Bidirectional sync between Outlook calendar and monday.com boards. Built as an Outlook Office Add-in with a Next.js backend.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **OAuth authentication** — Connect Microsoft 365 and monday.com accounts independently
+- **Bidirectional sync** — Calendar events from Outlook sync to monday.com items and vice versa
+- **Board subscription** — Select monday.com boards and date columns to sync
+- **Office SSO bootstrap** — Automatic identity detection via Outlook's SSO token
+- **Session cookie auth** — Secure session management for the taskpane
+- **Encrypted token storage** — All OAuth tokens are encrypted at rest
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16 (App Router) + React 19 |
+| Language | TypeScript |
+| Styling | Tailwind CSS 4 |
+| ORM | Prisma 5 + PostgreSQL |
+| Auth | Jose (JWT), custom session cookies |
+| HTTP Client | Native fetch |
+| Testing | Vitest |
+| Deployment | Vercel |
+| Add-in Runtime | Office.js (Outlook) |
+
+## Project Structure
+
+```
+├── app/
+│   ├── api/
+│   │   ├── auth/microsoft/        # Microsoft OAuth flow
+│   │   ├── auth/monday/           # monday.com OAuth flow
+│   │   ├── session/route.ts       # Session cookie endpoint
+│   │   ├── status/route.ts        # Connection status check
+│   │   └── sync/route.ts          # Calendar sync operations
+│   ├── taskpane/                  # Outlook taskpane UI
+│   │   ├── _components/
+│   │   │   ├── BoardsTab.tsx      # Board selection UI
+│   │   │   ├── SettingsTab.tsx    # Connection settings
+│   │   │   └── SsoBoot.tsx        # SSO bootstrap
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   └── commands/page.tsx          # Command surface fallback
+├── lib/
+│   ├── auth/                      # OAuth state, sessions, SSO
+│   ├── crypto/token.ts            # Token encryption utilities
+│   ├── db/client.ts               # Prisma client singleton
+│   ├── env.ts                     # Environment helper (VERCEL_URL aware)
+│   ├── monday/                    # monday.com API & OAuth
+│   └── ms/                        # Microsoft Graph & OAuth
+├── prisma/
+│   └── schema.prisma              # Database schema
+├── manifest/
+│   └── manifest.xml               # Office Add-in manifest
+├── scripts/
+│   └── start-tunnel.ts            # Dev tunnel + manifest updater
+└── tests/                         # Vitest unit tests
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Database Schema
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+users                — Microsoft identity (tenant + user)
+ms_accounts          — Microsoft Graph tokens & settings
+monday_accounts      — monday.com tokens & board defaults
+board_subscriptions  — Selected boards + date columns to sync
+event_mappings       — Outlook event ↔ monday item links
+sync_log             — Sync operation audit trail
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment Variables
 
-## Learn More
+Copy `.env.example` to `.env.local` and fill in:
 
-To learn more about Next.js, take a look at the following resources:
+| Variable | Purpose |
+|----------|---------|
+| `POSTGRES_URL` | PostgreSQL connection string |
+| `POSTGRES_URL_NON_POOLING` | Direct connection for Prisma migrations |
+| `MS_GRAPH_CLIENT_ID` | Azure AD app registration ID |
+| `MS_GRAPH_CLIENT_SECRET` | Azure AD client secret |
+| `MONDAY_CLIENT_ID` | monday.com OAuth app ID |
+| `MONDAY_CLIENT_SECRET` | monday.com OAuth secret |
+| `MONDAY_SIGNING_SECRET` | monday.com webhook signing secret |
+| `TOKEN_ENC_KEY` | Base64-encoded 32-byte key for token encryption |
+| `APP_BASE_URL` | Public origin for OAuth redirects (local dev only) |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Development
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+# Install dependencies
+npm install
 
-## Deploy on Vercel
+# Run database migrations
+npx prisma migrate dev
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Start dev server with HTTPS (required for Office Add-in)
+npm run dev
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Or start with Cloudflare tunnel + auto manifest update
+npm run dev:tunnel
+
+# Validate Office Add-in manifest
+npm run manifest:validate
+
+# Run tests
+npm test
+```
+
+## Deployment
+
+Deployed on Vercel. The build command includes `prisma generate` and `prisma migrate deploy`.
+
+> **Note:** Supabase network restrictions may block Vercel's build IP. If migrations fail during deploy, run the SQL in `scripts/supabase-migrate.sql` manually via Supabase Dashboard → SQL Editor.
+
+## Architecture Notes
+
+- `getAppBaseUrl()` in `lib/env.ts` prefers `VERCEL_URL` for dynamic preview/production URLs, falling back to `APP_BASE_URL` and then `localhost:3000`.
+- The manifest supports three Outlook surfaces: **MessageRead**, **AppointmentOrganizer**, and **AppointmentAttendee**.
+- `prisma migrate deploy` is wrapped with `timeout 30` in the Vercel build to prevent hanging on unreachable pooler connections.
