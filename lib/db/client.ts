@@ -4,9 +4,13 @@ declare global {
   var __prisma: PrismaClient | undefined;
 }
 
-// Use non-pooling direct URL at runtime to avoid PgBouncer prepared-statement errors (42P05).
-// POSTGRES_URL (pooled) is kept in schema for Prisma Migrate / Introspect via directUrl.
-const dbUrl = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL;
+// Vercel Supabase integration provides POSTGRES_PRISMA_URL with ?pgbouncer=true,
+// making it safe to use the connection pooler at runtime.
+// Fallback chain: Prisma URL → non-pooling direct URL → pooled URL.
+const dbUrl =
+  process.env.POSTGRES_PRISMA_URL ||
+  process.env.POSTGRES_URL_NON_POOLING ||
+  process.env.POSTGRES_URL;
 
 export const prisma =
   global.__prisma ??
