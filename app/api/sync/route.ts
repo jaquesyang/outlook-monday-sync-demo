@@ -5,9 +5,12 @@ import { decryptToken, encryptToken } from '@/lib/crypto/token';
 import {
   fetchBoardItems,
   fetchBoardColumns,
+  fetchMondayUsers,
+  findPeopleColumn,
   createMondayItem,
   updateMondayItem,
   type MondayItem,
+  type MondayUser,
 } from '@/lib/monday/api';
 import { createEvent, updateEvent, listEvents, type CalendarEvent } from '@/lib/ms/graph';
 import { refreshAccessToken } from '@/lib/ms/oauth';
@@ -30,7 +33,14 @@ function msEventToStartEnd(event: CalendarEvent): { start: Date; end: Date } {
 function buildMondayColumnValues(
   item: MondayItem,
   columns: Awaited<ReturnType<typeof fetchBoardColumns>>,
-  opts: { start: Date; end: Date; subject: string; location?: string },
+  opts: {
+    start: Date;
+    end: Date;
+    subject: string;
+    location?: string;
+    attendees?: Array<{ id: number; kind: 'person' }>;
+    peopleColId?: string;
+  },
 ): Record<string, unknown> {
   const dateCol = columns.find((c) => c.type === 'date');
   const durationCol = columns.find((c) => c.type === 'numbers');
@@ -61,6 +71,10 @@ function buildMondayColumnValues(
 
   if (textCol && opts.location) {
     values[textCol.id] = opts.location;
+  }
+
+  if (opts.peopleColId && opts.attendees) {
+    values[opts.peopleColId] = { personsAndTeams: opts.attendees };
   }
 
   return values;
@@ -129,7 +143,71 @@ export async function POST(req: NextRequest) {
     mondayToOutlook: { created: 0, updated: 0, failed: 0 },
     outlookToMonday: { created: 0, updated: 0, failed: 0 },
     conflicts: 0,
+    attendeesSkipped: 0,
   };
+
+  // ─── Attendee resolution setup ───
+  const peopleCol = findPeopleColumn(columns);
+  let userByEmail: Map<string, MondayUser> | null = null;
+  let userById: Map<string, MondayUser> | null = null;
+  if (peopleCol) {
+    try {
+      const users = await fetchMondayUsers(mondayToken);
+      userByEmail = new Map();
+      userById = new Map();
+      for (const u of users) {
+        if (u.email) userByEmail.set(u.email.toLowerCase(), u);
+        userById.set(u.id.toString(), u);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      await prisma.syncLog.create({
+        data: {
+          userId: session.userId,
+          direction: 'bidirectional',
+          action: 'fetch-users-failed',
+          message: `monday users query failed; attendee sync disabled: ${msg}`,
+        },
+      });
+      userByEmail = null;
+      userById = null;
+    }
+  }
+
+  function resolveMondayAttendees(item: MondayItem): string[] {
+    if (!userById) return [];
+    const emails: string[] = [];
+    for (const person of item.attendees) {
+      const user = userById.get(person.id.toString());
+      if (user && user.email) {
+        emails.push(user.email.toLowerCase());
+      } else {
+        results.attendeesSkipped++;
+      }
+    }
+    return emails;
+  }
+
+  function resolveOutlookAttendees(
+    event: CalendarEvent,
+  ): Array<{ id: number; kind: 'person' }> {
+    if (!userByEmail) return [];
+    const persons: Array<{ id: number; kind: 'person' }> = [];
+    for (const att of event.attendees ?? []) {
+      const email = att.emailAddress?.address?.toLowerCase();
+      if (!email) {
+        results.attendeesSkipped++;
+        continue;
+      }
+      const user = userByEmail.get(email);
+      if (user) {
+        persons.push({ id: Number(user.id), kind: 'person' });
+      } else {
+        results.attendeesSkipped++;
+      }
+    }
+    return persons;
+  }
 
   // Build lookup maps
   const mondayItemMap = new Map<string, MondayItem>();
@@ -191,6 +269,7 @@ export async function POST(req: NextRequest) {
             end: mondayItem.dateEnd!,
             body,
             location: mondayItem.location ?? undefined,
+            attendees: userById ? resolveMondayAttendees(mondayItem) : undefined,
           });
           const updatedEvent = await listEvents(msToken, {
             calendarId: msAcc.selectedCalendarId ?? undefined,
@@ -209,6 +288,8 @@ export async function POST(req: NextRequest) {
             end,
             subject: outlookEvent.subject,
             location: outlookEvent.location?.displayName,
+            attendees: userByEmail ? resolveOutlookAttendees(outlookEvent) : undefined,
+            peopleColId: userByEmail ? peopleCol?.id : undefined,
           });
           const updated = await updateMondayItem(
             mondayToken,
@@ -228,6 +309,7 @@ export async function POST(req: NextRequest) {
           end: mondayItem.dateEnd!,
           body,
           location: mondayItem.location ?? undefined,
+          attendees: userById ? resolveMondayAttendees(mondayItem) : undefined,
         });
         const updatedEvent = await listEvents(msToken, {
           calendarId: msAcc.selectedCalendarId ?? undefined,
@@ -245,6 +327,8 @@ export async function POST(req: NextRequest) {
           end,
           subject: outlookEvent.subject,
           location: outlookEvent.location?.displayName,
+          attendees: userByEmail ? resolveOutlookAttendees(outlookEvent) : undefined,
+          peopleColId: userByEmail ? peopleCol?.id : undefined,
         });
         const updated = await updateMondayItem(
           mondayToken,
@@ -284,6 +368,7 @@ export async function POST(req: NextRequest) {
         body,
         location: item.location ?? undefined,
         calendarId,
+        attendees: userById ? resolveMondayAttendees(item) : undefined,
       });
       await prisma.eventMapping.create({
         data: {
@@ -327,6 +412,8 @@ export async function POST(req: NextRequest) {
           end,
           subject: event.subject,
           location: event.location?.displayName,
+          attendees: userByEmail ? resolveOutlookAttendees(event) : undefined,
+          peopleColId: userByEmail ? peopleCol?.id : undefined,
         },
       );
       const item = await createMondayItem(

@@ -10,6 +10,13 @@ export type MondayItem = {
   location: string | null;
   durationHours: number | null;
   columnValues: Record<string, unknown>;
+  attendees: Array<{ id: bigint; kind: string }>;
+};
+
+export type MondayUser = {
+  id: bigint;
+  name: string;
+  email: string;
 };
 
 async function queryMonday<T>(accessToken: string, query: string, variables?: Record<string, unknown>): Promise<T> {
@@ -72,6 +79,7 @@ export async function fetchBoardItems(accessToken: string, boardId: bigint): Pro
     let dateEnd: Date | null = null;
     let location: string | null = null;
     let durationHours: number | null = null;
+    let attendees: Array<{ id: bigint; kind: string }> = [];
     const columnValues: Record<string, unknown> = {};
 
     for (const cv of item.column_values) {
@@ -93,6 +101,18 @@ export async function fetchBoardItems(accessToken: string, boardId: bigint): Pro
         }
         if (cv.type === 'numbers' && parsed !== null) {
           durationHours = Number(parsed);
+        }
+        if (
+          (cv.type === 'people' || cv.id.startsWith('multiple_person_')) &&
+          parsed &&
+          Array.isArray(parsed.personsAndTeams)
+        ) {
+          attendees = parsed.personsAndTeams.map(
+            (p: { id: number | string; kind?: string }) => ({
+              id: BigInt(p.id),
+              kind: p.kind ?? 'person',
+            }),
+          );
         }
       } catch {
         columnValues[cv.id] = cv.value;
@@ -121,6 +141,7 @@ export async function fetchBoardItems(accessToken: string, boardId: bigint): Pro
       location,
       durationHours,
       columnValues,
+      attendees,
     };
   });
 }
@@ -199,4 +220,32 @@ export async function updateMondayItem(
     columnValues: JSON.stringify(columnValues),
   });
   return data.change_multiple_column_values;
+}
+
+export async function fetchMondayUsers(accessToken: string): Promise<MondayUser[]> {
+  const query = `
+    query {
+      users {
+        id
+        name
+        email
+      }
+    }
+  `;
+  type Resp = {
+    users: Array<{ id: string; name: string; email: string }>;
+  };
+  const data = await queryMonday<Resp>(accessToken, query);
+  return (data.users ?? []).map((u) => ({
+    id: BigInt(u.id),
+    name: u.name,
+    email: u.email,
+  }));
+}
+
+export function findPeopleColumn(columns: BoardColumn[]): BoardColumn | undefined {
+  return (
+    columns.find((c) => c.type === 'people') ??
+    columns.find((c) => c.id.startsWith('multiple_person_'))
+  );
 }

@@ -24,7 +24,20 @@ export type CalendarEvent = {
   body?: { contentType: string; content: string };
   location?: { displayName: string };
   lastModifiedDateTime?: string;
+  attendees?: Array<{
+    emailAddress: { address: string; name?: string };
+    type?: 'required' | 'optional' | 'resource';
+    status?: { response: string; time?: string };
+  }>;
 };
+
+function toGraphAttendees(emails: string[] | undefined) {
+  if (!emails) return undefined;
+  return emails.map((email) => ({
+    emailAddress: { address: email },
+    type: 'required' as const,
+  }));
+}
 
 export async function createEvent(
   accessToken: string,
@@ -35,6 +48,7 @@ export async function createEvent(
     body?: string;
     location?: string;
     calendarId?: string;
+    attendees?: string[];
   },
 ): Promise<CalendarEvent> {
   const path = opts.calendarId
@@ -59,6 +73,7 @@ export async function createEvent(
       location: opts.location
         ? { displayName: opts.location }
         : undefined,
+      attendees: toGraphAttendees(opts.attendees),
     }),
   });
 }
@@ -72,6 +87,7 @@ export async function updateEvent(
     end?: Date;
     body?: string;
     location?: string;
+    attendees?: string[];
   },
 ): Promise<CalendarEvent> {
   // Graph API requires end > start for regular events.
@@ -96,6 +112,9 @@ export async function updateEvent(
       ...(opts.location !== undefined && {
         location: opts.location ? { displayName: opts.location } : null,
       }),
+      ...(opts.attendees !== undefined && {
+        attendees: toGraphAttendees(opts.attendees) ?? [],
+      }),
     }),
   });
 }
@@ -108,7 +127,7 @@ export async function listEvents(
     ? `/me/calendars/${opts.calendarId}/events`
     : '/me/events';
   const params = new URLSearchParams({
-    $select: 'id,subject,start,end,body,location,lastModifiedDateTime',
+    $select: 'id,subject,start,end,body,location,lastModifiedDateTime,attendees',
     $top: '100',
   });
   if (opts?.start && opts?.end) {

@@ -9,6 +9,7 @@ type SyncResult = {
   mondayToOutlook: { created: number; updated: number; failed: number };
   outlookToMonday: { created: number; updated: number; failed: number };
   conflicts: number;
+  attendeesSkipped?: number;
 };
 
 export function BoardsTab() {
@@ -59,6 +60,9 @@ export function BoardsTab() {
           <div>Outlook events: {result.totalOutlookEvents}</div>
           <div>Mappings: {result.mappings}</div>
           {result.conflicts > 0 && <div className="text-orange-600">Conflicts resolved: {result.conflicts}</div>}
+          {result.attendeesSkipped !== undefined && result.attendeesSkipped > 0 && (
+            <div className="text-orange-600">Attendees skipped: {result.attendeesSkipped}</div>
+          )}
           <div className="border-t border-green-200 pt-1 mt-1">
             <div className="font-medium">monday → Outlook</div>
             <div>Created: {result.mondayToOutlook.created}</div>
