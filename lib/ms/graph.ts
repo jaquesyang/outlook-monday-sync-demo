@@ -40,12 +40,19 @@ export async function createEvent(
   const path = opts.calendarId
     ? `/me/calendars/${opts.calendarId}/events`
     : '/me/events';
+
+  // Graph API requires end > start for regular events.
+  let end = opts.end;
+  if (end.getTime() <= opts.start.getTime()) {
+    end = new Date(opts.start.getTime() + 60 * 60 * 1000); // default 1 hour
+  }
+
   return graphFetch<CalendarEvent>(accessToken, path, {
     method: 'POST',
     body: JSON.stringify({
       subject: opts.subject,
       start: { dateTime: opts.start.toISOString(), timeZone: 'UTC' },
-      end: { dateTime: opts.end.toISOString(), timeZone: 'UTC' },
+      end: { dateTime: end.toISOString(), timeZone: 'UTC' },
       body: opts.body
         ? { contentType: 'html', content: opts.body }
         : undefined,
@@ -67,6 +74,12 @@ export async function updateEvent(
     location?: string;
   },
 ): Promise<CalendarEvent> {
+  // Graph API requires end > start for regular events.
+  let end = opts.end;
+  if (opts.start !== undefined && end !== undefined && end.getTime() <= opts.start.getTime()) {
+    end = new Date(opts.start.getTime() + 60 * 60 * 1000);
+  }
+
   return graphFetch<CalendarEvent>(accessToken, `/me/events/${eventId}`, {
     method: 'PATCH',
     body: JSON.stringify({
@@ -74,8 +87,8 @@ export async function updateEvent(
       ...(opts.start !== undefined && {
         start: { dateTime: opts.start.toISOString(), timeZone: 'UTC' },
       }),
-      ...(opts.end !== undefined && {
-        end: { dateTime: opts.end.toISOString(), timeZone: 'UTC' },
+      ...(end !== undefined && {
+        end: { dateTime: end.toISOString(), timeZone: 'UTC' },
       }),
       ...(opts.body !== undefined && {
         body: { contentType: 'html', content: opts.body },

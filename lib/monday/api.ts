@@ -32,7 +32,7 @@ export async function fetchBoardItems(accessToken: string, boardId: bigint): Pro
   const query = `
     query ($boardIds: [ID!]) {
       boards(ids: $boardIds) {
-        items_page {
+        items_page(limit: 500) {
           items {
             id
             name
@@ -106,9 +106,9 @@ export async function fetchBoardItems(accessToken: string, boardId: bigint): Pro
     if (dateStart && !dateEnd && durationHours && durationHours > 0) {
       dateEnd = new Date(dateStart.getTime() + durationHours * 60 * 60 * 1000);
     }
-    // Fallback: if still no end, use start (all-day-like)
+    // Fallback: default to 1-hour event so Graph API accepts it (end must be > start)
     if (dateStart && !dateEnd) {
-      dateEnd = dateStart;
+      dateEnd = new Date(dateStart.getTime() + 60 * 60 * 1000);
     }
 
     return {
