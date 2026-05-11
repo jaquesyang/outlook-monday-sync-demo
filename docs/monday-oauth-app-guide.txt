@@ -2,7 +2,7 @@ Here's the step-by-step guide to register your monday.com OAuth app.
 
   1. Go to monday.com developers
 
-  Open https://monday.com/developers/apps and sign in with your monday account.
+  Open https://novus-demo.monday.com/apps/manage and sign in with your monday account.
 
   2. Create a new app
 
@@ -66,3 +66,6 @@ Here's the step-by-step guide to register your monday.com OAuth app.
   ---
   After this works, both Microsoft and monday will be connected. Want me to walk you through
   testing the full taskpane in Outlook next?
+
+
+
